@@ -1,18 +1,26 @@
-# Build results
+﻿# Archivos y carpetas de Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Archivos de compilación
 bin/
 obj/
 
-# User-specific files
-*.user
-*.suo
+# Publicaciones temporales
+*.publish.xml
+*.dbmdl
 
-# VS cache
-.vs/
-*.VC.db
-*.VC.opendb
-
-# Others
+# Logs
 *.log
-*.tlog
+
+# Configs locales
+appsettings.Development.json
+secrets.json
+
+# Otros archivos temporales
 *.cache
-*.pdb
+*.tmp
+*.bak
