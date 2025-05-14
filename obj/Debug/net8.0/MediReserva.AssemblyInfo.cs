@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MediReserva")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+21fe4b340cbac896429fd981d20ba07f17e06263")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7d88c382656e0ba1d8f4c089ab1dc6e71dbc2058")]
 [assembly: System.Reflection.AssemblyProductAttribute("MediReserva")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MediReserva")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
