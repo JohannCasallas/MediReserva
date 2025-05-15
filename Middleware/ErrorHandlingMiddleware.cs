@@ -31,10 +31,27 @@ namespace MediReserva.Middleware
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-            var response = new ApiResponse<string>(null, false, "Ocurrió un error interno.");
+            var env = context.RequestServices.GetService<IWebHostEnvironment>();
+
+            string message;
+
+            if (env != null && env.IsDevelopment())
+            {
+                // Mostrar detalle del error en desarrollo
+                message = $"Error: {exception.Message} | StackTrace: {exception.StackTrace}";
+            }
+            else
+            {
+                // Mensaje genérico para producción
+                message = "Ocurrió un error interno.";
+            }
+
+            var response = new ApiResponse<string>(null, false, message);
             var json = System.Text.Json.JsonSerializer.Serialize(response);
+
             return context.Response.WriteAsync(json);
         }
+
     }
 
 }

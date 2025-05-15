@@ -1,84 +1,73 @@
-﻿using MediReserva.Models;
+﻿using MediReserva.Data;
+using MediReserva.Models;
 using MediReserva.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-namespace MediReserva.Controllers
+namespace MediReserva.Services.Implementations
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class CitaController : ControllerBase
+    public class CitaService : ICitaService
     {
-        private readonly ICitaService _citaService;
+        private readonly ApplicationDbContext _context;
 
-        public CitaController(ICitaService citaService)
+        public CitaService(ApplicationDbContext context)
         {
-            _citaService = citaService;
+            _context = context;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<List<Citum>> GetAllAsync()
         {
-            var citas = await _citaService.GetAllAsync();
-            // Retornar datos con estructura estándar
-            return Ok(new ApiResponse<List<Citum>>(citas));
+            return await _context.Cita.ToListAsync();
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<Citum?> GetByIdAsync(int id)
         {
-            var cita = await _citaService.GetByIdAsync(id);
+            return await _context.Cita.FindAsync(id);
+        }
+
+        public async Task<List<Citum>> GetByFechaAsync(DateOnly fecha)
+        {
+            return await _context.Cita
+                .Where(c => c.FechaCita == fecha)
+                .ToListAsync();
+        }
+
+        public async Task<List<Citum>> GetByPacienteAsync(int pacienteId)
+        {
+            return await _context.Cita
+                .Where(c => c.PacienteId == pacienteId)
+                .ToListAsync();
+        }
+
+        public async Task<List<Citum>> GetByMedicoAsync(int medicoId)
+        {
+            return await _context.Cita
+                .Where(c => c.MedicoId == medicoId)
+                .ToListAsync();
+        }
+
+        public async Task AddAsync(Citum cita)
+        {
+            _context.Cita.Add(cita);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(Citum cita)
+        {
+            if (!await _context.Cita.AnyAsync(c => c.Id == cita.Id))
+                throw new KeyNotFoundException("Cita no encontrada.");
+
+            _context.Entry(cita).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task CancelAsync(int id)
+        {
+            var cita = await _context.Cita.FindAsync(id);
             if (cita == null)
-                return NotFound(new ApiResponse<string>($"Cita con id {id} no encontrada.", false));
+                throw new KeyNotFoundException("Cita no encontrada.");
 
-            return Ok(new ApiResponse<Citum>(cita));
-        }
-
-        [HttpGet("por-fecha/{fecha}")]
-        public async Task<IActionResult> GetByFecha(string fecha)
-        {
-            if (!DateOnly.TryParse(fecha, out var parsedFecha))
-                return BadRequest(new ApiResponse<string>("Formato de fecha inválido. Usa AAAA-MM-DD.", false));
-
-            var citas = await _citaService.GetByFechaAsync(parsedFecha);
-            return Ok(new ApiResponse<List<Citum>>(citas));
-        }
-
-        [HttpGet("por-paciente/{pacienteId}")]
-        public async Task<IActionResult> GetByPaciente(int pacienteId)
-        {
-            var citas = await _citaService.GetByPacienteAsync(pacienteId);
-            return Ok(new ApiResponse<List<Citum>>(citas));
-        }
-
-        [HttpGet("por-medico/{medicoId}")]
-        public async Task<IActionResult> GetByMedico(int medicoId)
-        {
-            var citas = await _citaService.GetByMedicoAsync(medicoId);
-            return Ok(new ApiResponse<List<Citum>>(citas));
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Add(Citum cita)
-        {
-            await _citaService.AddAsync(cita);
-            return CreatedAtAction(nameof(GetById), new { id = cita.Id }, new ApiResponse<Citum>(cita));
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Citum cita)
-        {
-            if (id != cita.Id)
-                return BadRequest(new ApiResponse<string>("El id de la cita no coincide.", false));
-
-            await _citaService.UpdateAsync(cita);
-            return NoContent();
-        }
-
-        [HttpPut("cancelar/{id}")]
-        public async Task<IActionResult> Cancel(int id)
-        {
-            await _citaService.CancelAsync(id);
-            return NoContent();
+            cita.Estado = "Cancelada"; // Asegúrate de tener esta propiedad
+            await _context.SaveChangesAsync();
         }
     }
 }

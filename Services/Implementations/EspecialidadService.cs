@@ -1,29 +1,33 @@
-﻿using MediReserva.Models;
+﻿using MediReserva.Data;
+using MediReserva.Models;
 using MediReserva.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-public class EspecialidadService : IEspecialidadService
+namespace MediReserva.Services.Implementations
 {
-    private readonly ApplicationDbContext _context;
-
-    public EspecialidadService(ApplicationDbContext context)
+    public class EspecialidadService : IEspecialidadService
     {
-        _context = context;
-    }
+        private readonly ApplicationDbContext _context;
 
-    public async Task<List<Especialidad>> GetAllAsync()
-    {
-        return await _context.Especialidads.ToListAsync();
-    }
+        public EspecialidadService(ApplicationDbContext context)
+        {
+            _context = context;
+        }
 
-    public async Task<Especialidad?> GetByIdAsync(int id)
-    {
-        return await _context.Especialidads.FindAsync(id);
-    }
+        public async Task<List<Especialidad>> GetAllAsync()
+        {
+            return await _context.Especialidads.ToListAsync();
+        }
 
-    public async Task AddAsync(Especialidad especialidad)
-    {
-        await _context.Especialidads.AddAsync(especialidad);
-        await _context.SaveChangesAsync();
+        public async Task<Especialidad?> GetByIdAsync(int id)
+        {
+            return await _context.Especialidads.FindAsync(id);
+        }
+
+        public async Task AddAsync(Especialidad especialidad)
+        {
+            _context.Especialidads.Add(especialidad);
+            await _context.SaveChangesAsync();
+        }
     }
 }

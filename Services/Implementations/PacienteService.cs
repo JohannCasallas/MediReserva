@@ -1,6 +1,9 @@
-﻿using MediReserva.Models;
+﻿using MediReserva.Data;
+using MediReserva.Models;
 using MediReserva.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MediReserva.Services.Implementations
 {
@@ -25,24 +28,28 @@ namespace MediReserva.Services.Implementations
 
         public async Task AddAsync(Paciente paciente)
         {
-            await _context.Pacientes.AddAsync(paciente);
+            _context.Pacientes.Add(paciente);
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(Paciente paciente)
         {
-            _context.Pacientes.Update(paciente);
+            var existingPaciente = await _context.Pacientes.FindAsync(paciente.Id);
+            if (existingPaciente == null)
+                throw new KeyNotFoundException($"Paciente con id {paciente.Id} no encontrado.");
+
+            _context.Entry(existingPaciente).CurrentValues.SetValues(paciente);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
             var paciente = await _context.Pacientes.FindAsync(id);
-            if (paciente != null)
-            {
-                _context.Pacientes.Remove(paciente);
-                await _context.SaveChangesAsync();
-            }
+            if (paciente == null)
+                throw new KeyNotFoundException($"Paciente con id {id} no encontrado.");
+
+            _context.Pacientes.Remove(paciente);
+            await _context.SaveChangesAsync();
         }
     }
 }

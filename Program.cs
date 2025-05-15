@@ -1,6 +1,7 @@
 using MediReserva.Components;
+using MediReserva.Data;
 using MediReserva.Middleware;
-using MediReserva.Models;
+using MediReserva.Services;
 using MediReserva.Services.Implementations;
 using MediReserva.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -17,27 +18,30 @@ namespace MediReserva
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("ClinicaDB")));
 
-            // Inyecta los servicios de negocio
-            builder.Services.AddScoped<IPacienteService, PacienteService>();
-            builder.Services.AddScoped<IMedicoService, MedicoService>();
+            // Inyección de dependencias para servicios de aplicación
+            builder.Services.AddScoped<ICitaService, CitaService>();
             builder.Services.AddScoped<IEspecialidadService, EspecialidadService>();
+            builder.Services.AddScoped<IMedicoService, MedicoService>();
+            builder.Services.AddScoped<IPacienteService, PacienteService>();
 
-            // Registra los controladores API
+
+            // Registro de controladores API
             builder.Services.AddControllers();
 
-            // Registra Swagger para documentación de la API
-            builder.Services.AddEndpointsApiExplorer(); // Necesario para exponer los endpoints
-            builder.Services.AddSwaggerGen();           // Genera Swagger
+            // Documentación Swagger para APIs
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
 
-            // Registra los servicios de Razor Components
+            // Configuración de componentes Razor interactivos (Blazor Server)
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
             var app = builder.Build();
 
-            app.UseMiddleware<ErrorHandlingMiddleware>();// Manejo de erores
+            // Middleware de manejo global de errores
+            app.UseMiddleware<ErrorHandlingMiddleware>();
 
-            // Configura el pipeline HTTP
+            // Configuración del pipeline HTTP
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
@@ -45,20 +49,19 @@ namespace MediReserva
             }
             else
             {
-                // Habilita Swagger en entorno de desarrollo
-                app.UseSwagger();      // Genera el archivo Swagger JSON
-                app.UseSwaggerUI();    // Interfaz web en /swagger
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseAntiforgery();
 
-            // Mapea componentes Blazor
+            // Mapeo de componentes Blazor
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
 
-            // Mapea los controladores API (indispensable para Swagger)
+            // Mapeo de controladores API
             app.MapControllers();
 
             app.Run();
