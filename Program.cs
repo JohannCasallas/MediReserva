@@ -1,5 +1,7 @@
 using MediReserva.Components;
 using MediReserva.Models;
+using MediReserva.Services.Implementations;
+using MediReserva.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MediReserva
@@ -13,6 +15,12 @@ namespace MediReserva
             // Configura el contexto de base de datos con la cadena de conexión
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("ClinicaDB")));
+
+            // Exponer servicios aquí
+            builder.Services.AddScoped<IPacienteService, PacienteService>();
+            builder.Services.AddScoped<IMedicoService, MedicoService>();
+            builder.Services.AddScoped<ICitaService, CitaService>();
+            builder.Services.AddScoped<IEspecialidadService, EspecialidadService>();
 
             // Agrega servicios de Razor
             builder.Services.AddRazorComponents()
