@@ -1,8 +1,6 @@
 using MediReserva.Components;
 using MediReserva.Middleware;
 using MediReserva.Models;
-using MediReserva.Services.Implementations;
-using MediReserva.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MediReserva
@@ -16,11 +14,7 @@ namespace MediReserva
             // Configura el contexto de base de datos
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("ClinicaDB")));
-
-            // Inyecta los servicios de negocio
-            builder.Services.AddScoped<IPacienteService, PacienteService>();
-            builder.Services.AddScoped<IMedicoService, MedicoService>();
-            builder.Services.AddScoped<IEspecialidadService, EspecialidadService>();
+            
 
             // Registra los controladores API
             builder.Services.AddControllers();

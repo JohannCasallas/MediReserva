@@ -1,29 +1,51 @@
 ﻿using MediReserva.Models;
 using MediReserva.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 
-public class EspecialidadService : IEspecialidadService
+
+namespace MediReserva.Controllers
 {
-    private readonly ApplicationDbContext _context;
-
-    public EspecialidadService(ApplicationDbContext context)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class EspecialidadController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly IEspecialidadService _EspecialidadService;
 
-    public async Task<List<Especialidad>> GetAllAsync()
-    {
-        return await _context.Especialidads.ToListAsync();
-    }
+        public EspecialidadController(IEspecialidadService especialidadService)
+        {
+            _EspecialidadService = especialidadService;
+        }
 
-    public async Task<Especialidad?> GetByIdAsync(int id)
-    {
-        return await _context.Especialidads.FindAsync(id);
-    }
+        [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<List<Especialidad>>), 200)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetAll()
+        {
+            var especialidad = await _EspecialidadService.GetAllAsync();
+            return Ok(new ApiResponse<List<Especialidad>>(especialidad));
+        }
 
-    public async Task AddAsync(Especialidad especialidad)
-    {
-        await _context.Especialidads.AddAsync(especialidad);
-        await _context.SaveChangesAsync();
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(ApiResponse<Especialidad>), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var especialidad = await _EspecialidadService.GetByIdAsync(id);
+            if (especialidad == null)
+                return NotFound(new ApiResponse<string>($"Especialidad con id {id} no encontrada.", false));
+
+            return Ok(new ApiResponse<Especialidad>(especialidad));
+        }
+
+        [HttpPost]
+        [ProducesResponseType(typeof(ApiResponse<Especialidad>), 201)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> Add(Especialidad especialidad)
+        {
+            await _EspecialidadService.AddAsync(especialidad);
+            return CreatedAtAction(nameof(GetById), new { id = especialidad.Id }, new ApiResponse<Especialidad>(especialidad));
+        }
     }
 }
