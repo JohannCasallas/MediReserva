@@ -1,86 +1,53 @@
-﻿using MediReserva.Models;
+﻿using MediReserva.Data;
+using MediReserva.Models;
 using MediReserva.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-namespace MediReserva.Controllers
+namespace MediReserva.Services.Implementations
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class MedicoController : ControllerBase
+    public class MedicoService : IMedicoService
     {
-        private readonly IMedicoService _medicoService;
+        private readonly ApplicationDbContext _context;
 
-        public MedicoController(IMedicoService medicoService)
+        public MedicoService(ApplicationDbContext context)
         {
-            _medicoService = medicoService;
+            _context = context;
         }
 
-        [HttpGet]
-        [ProducesResponseType(typeof(ApiResponse<List<Medico>>), 200)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> GetAll()
+        public async Task<List<Medico>> GetAllAsync()
         {
-            var medicos = await _medicoService.GetAllAsync();
-            return Ok(new ApiResponse<List<Medico>>(medicos));
+            return await _context.Medicos.ToListAsync();
         }
 
-        [HttpGet("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<Medico>), 200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<Medico?> GetByIdAsync(int id)
         {
-            var medico = await _medicoService.GetByIdAsync(id);
+            return await _context.Medicos.FindAsync(id);
+        }
+
+        public async Task AddAsync(Medico medico)
+        {
+            _context.Medicos.Add(medico);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(Medico medico)
+        {
+            var existingMedico = await _context.Medicos.FindAsync(medico.Id);
+            if (existingMedico == null)
+                throw new KeyNotFoundException($"Médico con id {medico.Id} no encontrado.");
+
+            _context.Entry(existingMedico).CurrentValues.SetValues(medico);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var medico = await _context.Medicos.FindAsync(id);
             if (medico == null)
-                return NotFound(new ApiResponse<string>($"Médico con id {id} no encontrado.", false));
+                throw new KeyNotFoundException($"Médico con id {id} no encontrado.");
 
-            return Ok(new ApiResponse<Medico>(medico));
-        }
-
-        [HttpPost]
-        [ProducesResponseType(typeof(ApiResponse<Medico>), 201)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> Add(Medico medico)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>("Datos inválidos en la solicitud.", false));
-
-            await _medicoService.AddAsync(medico);
-            return CreatedAtAction(nameof(GetById), new { id = medico.Id }, new ApiResponse<Medico>(medico));
-        }
-
-        [HttpPut("{id}")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> Update(int id, Medico medico)
-        {
-            if (id != medico.Id)
-                return BadRequest(new ApiResponse<string>("El ID del médico no coincide con el cuerpo de la solicitud.", false));
-
-            if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>("Datos inválidos en la solicitud.", false));
-
-            await _medicoService.UpdateAsync(medico);
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> Delete(int id)
-        {
-            try
-            {
-                await _medicoService.DeleteAsync(id);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new ApiResponse<string>(ex.Message, false));
-            }
+            _context.Medicos.Remove(medico);
+            await _context.SaveChangesAsync();
         }
     }
 }

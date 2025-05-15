@@ -1,89 +1,55 @@
-﻿using MediReserva.Models;
+﻿using MediReserva.Data;
+using MediReserva.Models;
 using MediReserva.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace MediReserva.Controllers
+namespace MediReserva.Services.Implementations
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class PacienteController : ControllerBase
+    public class PacienteService : IPacienteService
     {
-        private readonly IPacienteService _pacienteService;
+        private readonly ApplicationDbContext _context;
 
-        public PacienteController(IPacienteService pacienteService)
+        public PacienteService(ApplicationDbContext context)
         {
-            _pacienteService = pacienteService;
+            _context = context;
         }
 
-        [HttpGet]
-        [ProducesResponseType(typeof(ApiResponse<List<Paciente>>), 200)]
-        public async Task<IActionResult> GetAll()
+        public async Task<List<Paciente>> GetAllAsync()
         {
-            var pacientes = await _pacienteService.GetAllAsync();
-            return Ok(new ApiResponse<List<Paciente>>(pacientes));
+            return await _context.Pacientes.ToListAsync();
         }
 
-        [HttpGet("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<Paciente>), 200)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<Paciente?> GetByIdAsync(int id)
         {
-            var paciente = await _pacienteService.GetByIdAsync(id);
+            return await _context.Pacientes.FindAsync(id);
+        }
+
+        public async Task AddAsync(Paciente paciente)
+        {
+            _context.Pacientes.Add(paciente);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(Paciente paciente)
+        {
+            var existingPaciente = await _context.Pacientes.FindAsync(paciente.Id);
+            if (existingPaciente == null)
+                throw new KeyNotFoundException($"Paciente con id {paciente.Id} no encontrado.");
+
+            _context.Entry(existingPaciente).CurrentValues.SetValues(paciente);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var paciente = await _context.Pacientes.FindAsync(id);
             if (paciente == null)
-                return NotFound(new ApiResponse<string>($"El paciente con ID {id} no fue encontrado.", false));
+                throw new KeyNotFoundException($"Paciente con id {id} no encontrado.");
 
-            return Ok(new ApiResponse<Paciente>(paciente));
-        }
-
-        [HttpPost]
-        [ProducesResponseType(typeof(ApiResponse<Paciente>), 201)]
-        [ProducesResponseType(400)]
-        public async Task<IActionResult> Add(Paciente paciente)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>("Datos inválidos para crear el paciente.", false));
-
-            await _pacienteService.AddAsync(paciente);
-            return CreatedAtAction(nameof(GetById), new { id = paciente.Id }, new ApiResponse<Paciente>(paciente));
-        }
-
-        [HttpPut("{id}")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> Update(int id, Paciente paciente)
-        {
-            if (id != paciente.Id)
-                return BadRequest(new ApiResponse<string>("El ID del paciente no coincide con el de la URL.", false));
-
-            if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<string>("Datos inválidos para actualizar el paciente.", false));
-
-            try
-            {
-                await _pacienteService.UpdateAsync(paciente);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new ApiResponse<string>(ex.Message, false));
-            }
-        }
-
-        [HttpDelete("{id}")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public async Task<IActionResult> Delete(int id)
-        {
-            try
-            {
-                await _pacienteService.DeleteAsync(id);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new ApiResponse<string>(ex.Message, false));
-            }
+            _context.Pacientes.Remove(paciente);
+            await _context.SaveChangesAsync();
         }
     }
 }
