@@ -1,0 +1,25 @@
+﻿@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components
+@using MediReserva.Components
+
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+    </Found>
+    <NotFound>
+        <div class="not-found">
+            <h1>Error 404</h1>
+            <p>Página no encontradadddd</p>
+            <a href="/">Ir al inicio</a>
+        </div>
+    </NotFound>
+</Router>
+
+<style>
+    .not-found {
+        text-align: center;
+        padding: 2rem;
+        color: #ff0000;
+    }
+</style>
