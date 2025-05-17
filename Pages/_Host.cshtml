@@ -14,8 +14,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="css/site.css" rel="stylesheet" />
 
+    <!-- Estilos de MudBlazor (opcional, depende si usas componentes visuales que los requieren) -->
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
 </head>
 <body>
+    <!-- Proveedores de MudBlazor -->
+    <MudThemeProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+
     <app>
         <component type="typeof(App)" render-mode="Server" />
     </app>
