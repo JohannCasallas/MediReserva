@@ -1,32 +1,88 @@
 ﻿@page "/medicos"
-@inject IMedicoService MedicoService
+@using MediReserva.Models
 
-<MudPaper Class="pa-4">
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
     <MudText Typo="Typo.h5" Class="mb-4">Listado de Médicos</MudText>
 
-    <MudTable Items="_medicos" Dense="true" Hover="true">
-        <HeaderContent>
-            <MudTh>Nombre</MudTh>
-            <MudTh>Email</MudTh>
-            <MudTh>Teléfono</MudTh>
-            <MudTh>Consultorio</MudTh>
-            <MudTh>Especialidad</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>@context.Nombre</MudTd>
-            <MudTd>@context.Email</MudTd>
-            <MudTd>@context.Telefono</MudTd>
-            <MudTd>@context.Consultorio</MudTd>
-            <MudTd>@context.Especialidad?.Nombre</MudTd>
-        </RowTemplate>
-    </MudTable>
-</MudPaper>
+    <MudGrid Class="mb-4">
+        <MudItem xs="6">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Buscar..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          Margin="Margin.Dense"
+                          FullWidth="true" />
+        </MudItem>
+        <MudItem xs="6" Class="d-flex justify-end">
+            <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="CrearMedico">
+                Crear Médico
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+    <MudPaper Class="p-4">
+        <MudTable Items="_filteredMedicos"
+                  Filter="TableFilter"
+                  RowsPerPage="5"
+                  Hover="true"
+                  Bordered="true"
+                  Striped="true">
+            <HeaderContent>
+                <MudTh>Nombre</MudTh>
+                <MudTh>Email</MudTh>
+                <MudTh>Teléfono</MudTh>
+                <MudTh>Consultorio</MudTh>
+                <MudTh>Acciones</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nombre">@context.Nombre</MudTd>
+                <MudTd DataLabel="Email">@context.Email</MudTd>
+                <MudTd DataLabel="Teléfono">@context.Telefono</MudTd>
+                <MudTd DataLabel="Consultorio">@context.Consultorio</MudTd>
+                <MudTd DataLabel="Acciones">
+                    <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => EditarMedico(context))">Editar</MudButton>
+                    <MudButton Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined" Class="ml-2" OnClick="@(() => EliminarMedico(context))">Eliminar</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
 
 @code {
-    private List<Medico> _medicos = new();
-
-    protected override async Task OnInitializedAsync()
+    private List<Medico> _medicos = new()
     {
-        _medicos = await MedicoService.GetAllAsync();
+        new Medico { Id = 1, Nombre = "Dra. Ana Pérez", Email = "ana.perez@clinicax.com", Telefono = "3001234567", Consultorio = "101", EspecialidadId = 1 },
+        new Medico { Id = 2, Nombre = "Dr. Juan Gómez", Email = "juan.gomez@clinicax.com", Telefono = "3012345678", Consultorio = "102", EspecialidadId = 2 },
+        new Medico { Id = 3, Nombre = "Dra. Laura Díaz", Email = "laura.diaz@clinicax.com", Telefono = "3023456789", Consultorio = "103", EspecialidadId = 3 }
+    };
+
+    private string _searchString = "";
+
+    private IEnumerable<Medico> _filteredMedicos => _medicos.Where(TableFilter);
+
+    private bool TableFilter(Medico medico)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        return (medico.Nombre?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (medico.Email?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (medico.Telefono?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (medico.Consultorio?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    private void CrearMedico()
+    {
+        // Lógica para crear médico (puedes redirigir, mostrar un formulario, etc.)
+    }
+
+    private void EditarMedico(Medico medico)
+    {
+        // Lógica para edición (puedes abrir un diálogo aquí)
+    }
+
+    private void EliminarMedico(Medico medico)
+    {
+        _medicos.Remove(medico);
     }
 }
