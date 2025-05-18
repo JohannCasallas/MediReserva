@@ -4,6 +4,7 @@ using MediReserva.Middleware;
 using MediReserva.Services.Implementations;
 using MediReserva.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 using Syncfusion.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddMudServices();
 
 var app = builder.Build();
 

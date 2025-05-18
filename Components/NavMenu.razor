@@ -1,10 +1,18 @@
-﻿@inject NavigationManager Navigation
+﻿@using MudBlazor
+@using MediReserva.Components
 
-<nav>
-    <ul>
-        <li><NavLink href="/" Match="NavLinkMatch.All">Inicio</NavLink></li>
-        <li><NavLink href="/citas">Citas</NavLink></li>
-        <li><NavLink href="/pacientes">Pacientes</NavLink></li>
-        <li><NavLink href="/medicos">Médicos</NavLink></li>
-    </ul>
-</nav>
+
+<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">
+        Inicio
+    </MudNavLink>
+    <MudNavLink Href="/citas" Icon="@Icons.Material.Filled.EventNote">
+        Citas
+    </MudNavLink>
+    <MudNavLink Href="/pacientes" Icon="@Icons.Material.Filled.People">
+        Pacientes
+    </MudNavLink>
+    <MudNavLink Href="/medicos" Icon="@Icons.Material.Filled.MedicalServices">
+        Médicos
+    </MudNavLink>
+</MudNavMenu>
