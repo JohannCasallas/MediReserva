@@ -1,3 +1,32 @@
 ﻿@page "/medicos"
+@inject IMedicoService MedicoService
 
-<h3>medicos</h3>
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Listado de Médicos</MudText>
+
+    <MudTable Items="_medicos" Dense="true" Hover="true">
+        <HeaderContent>
+            <MudTh>Nombre</MudTh>
+            <MudTh>Email</MudTh>
+            <MudTh>Teléfono</MudTh>
+            <MudTh>Consultorio</MudTh>
+            <MudTh>Especialidad</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Nombre</MudTd>
+            <MudTd>@context.Email</MudTd>
+            <MudTd>@context.Telefono</MudTd>
+            <MudTd>@context.Consultorio</MudTd>
+            <MudTd>@context.Especialidad?.Nombre</MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<Medico> _medicos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _medicos = await MedicoService.GetAllAsync();
+    }
+}
