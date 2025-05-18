@@ -1,8 +1,4 @@
 ﻿@inherits LayoutComponentBase
-@using MediReserva.Components
-@using MudBlazor
-
-
 
 <MudThemeProvider />
 
@@ -16,7 +12,20 @@
         <MudDrawerHeader>
             <MudText Typo="Typo.h5" Class="mt-1">MediReserva</MudText>
         </MudDrawerHeader>
-        <NavMenu />
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">
+                Inicio
+            </MudNavLink>
+            <MudNavLink Href="/citas" Icon="@Icons.Material.Filled.EventNote">
+                Citas
+            </MudNavLink>
+            <MudNavLink Href="/pacientes" Icon="@Icons.Material.Filled.People">
+                Pacientes
+            </MudNavLink>
+            <MudNavLink Href="/medicos" Icon="@Icons.Material.Filled.MedicalServices">
+                Médicos
+            </MudNavLink>
+        </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
         @*Body*@
