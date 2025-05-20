@@ -1,6 +1,7 @@
 ﻿@page "/medicos"
 @using MediReserva.Models
 @using MediReserva.Pages.Modals
+@inject IMedicoService MedicoService
 @inject IDialogService DialogService
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
@@ -23,13 +24,19 @@
         </MudItem>
     </MudGrid>
 
-    <MudPaper Class="p-4">
-        <MudTable Items="_filteredMedicos"
-                  Filter="TableFilter"
-                  RowsPerPage="5"
-                  Hover="true"
-                  Bordered="true"
-                  Striped="true">
+    @if (_isLoading)
+    {
+        <div style="display: flex; justify-content: center; align-items: center; height: 60vh;">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+        </div>
+    }
+    else if (_medicos == null || !_medicos.Any())
+    {
+        <MudText>No hay médicos disponibles.</MudText>
+    }
+    else
+    {
+        <MudTable Items="_medicos" Filter="TableFilter" Hover="true" Bordered="true" Striped="true">
             <HeaderContent>
                 <MudTh>Nombre</MudTh>
                 <MudTh>Email</MudTh>
@@ -38,30 +45,46 @@
                 <MudTh>Acciones</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Nombre">@context.Nombre</MudTd>
-                <MudTd DataLabel="Email">@context.Email</MudTd>
-                <MudTd DataLabel="Teléfono">@context.Telefono</MudTd>
-                <MudTd DataLabel="Consultorio">@context.Consultorio</MudTd>
-                <MudTd DataLabel="Acciones">
-                    <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => EditarMedico(context))">Editar</MudButton>
-                    <MudButton Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined" Class="ml-2" OnClick="@(() => EliminarMedico(context))">Eliminar</MudButton>
+                <MudTd>@context.Nombre</MudTd>
+                <MudTd>@context.Email</MudTd>
+                <MudTd>@context.Telefono</MudTd>
+                <MudTd>@context.Consultorio</MudTd>
+                <MudTd>
+                    <MudButton Color="Color.Primary"
+                               Variant="Variant.Outlined"
+                               Size="Size.Small"
+                               OnClick="@(() => EditarMedico(context))">
+                        Editar
+                    </MudButton>
+                    <MudButton Color="Color.Error"
+                               Variant="Variant.Outlined"
+                               Size="Size.Small"
+                               Class="ml-2"
+                               OnClick="@(() => EliminarMedico(context))">
+                        Eliminar
+                    </MudButton>
                 </MudTd>
             </RowTemplate>
         </MudTable>
-    </MudPaper>
+    }
+
 </MudContainer>
 
 @code {
-    private List<Medico> _medicos = new()
-    {
-        new Medico { Id = 1, Nombre = "Dra. Ana Pérez", Email = "ana.perez@clinicax.com", Telefono = "3001234567", Consultorio = "101", EspecialidadId = 1 },
-        new Medico { Id = 2, Nombre = "Dr. Juan Gómez", Email = "juan.gomez@clinicax.com", Telefono = "3012345678", Consultorio = "102", EspecialidadId = 2 },
-        new Medico { Id = 3, Nombre = "Dra. Laura Díaz", Email = "laura.diaz@clinicax.com", Telefono = "3023456789", Consultorio = "103", EspecialidadId = 3 }
-    };
-
+    private List<Medico>? _medicos;
     private string _searchString = "";
 
-    private IEnumerable<Medico> _filteredMedicos => _medicos.Where(TableFilter);
+    private IEnumerable<Medico> _filteredMedicos => _medicos?.Where(TableFilter) ?? Enumerable.Empty<Medico>();
+
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        _medicos = await MedicoService.GetAllAsync();
+        _isLoading = false;
+        StateHasChanged();
+    }
 
     private bool TableFilter(Medico medico)
     {
@@ -93,10 +116,9 @@
         if (dialog is not null)
         {
             var result = await dialog.Result;
-
             if (result is { Canceled: false, Data: Medico medicoCreado })
             {
-                _medicos.Add(medicoCreado);
+                _medicos?.Add(medicoCreado);
             }
         }
     }
@@ -120,19 +142,17 @@
         if (dialog is not null)
         {
             var result = await dialog.Result;
-
             if (result is { Canceled: false, Data: Medico medicoEditado })
             {
-                var index = _medicos.FindIndex(m => m.Id == medicoEditado.Id);
-                if (index != -1)
-                    _medicos[index] = medicoEditado;
+                var index = _medicos?.FindIndex(m => m.Id == medicoEditado.Id);
+                if (index.HasValue && index.Value != -1)
+                    _medicos![index.Value] = medicoEditado;
             }
         }
     }
 
-
     private void EliminarMedico(Medico medico)
     {
-        _medicos.Remove(medico);
+        _medicos?.Remove(medico);
     }
 }
