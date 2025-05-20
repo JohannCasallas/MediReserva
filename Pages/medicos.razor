@@ -3,8 +3,20 @@
 @using MediReserva.Pages.Modals
 @inject IMedicoService MedicoService
 @inject IDialogService DialogService
+@inject NavigationManager Navigation
+
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+    <MudMessageBox @ref="_messageBox" Title="Confirmación" CancelText="Cancelar">
+    <MessageContent>
+        ¿Está seguro que desea eliminar este médico? Esta acción no se puede deshacer.
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">
+            Eliminar
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
     <MudText Typo="Typo.h5" Class="mb-4">Listado de Médicos</MudText>
 
     <MudGrid Class="mb-4">
@@ -151,8 +163,27 @@
         }
     }
 
-    private void EliminarMedico(Medico medico)
+    private MudMessageBox? _messageBox;
+
+    private async Task EliminarMedico(Medico medico)
     {
-        _medicos?.Remove(medico);
+        bool? result = await _messageBox!.ShowAsync();
+
+        if (result == true)
+        {
+            try
+            {
+                await MedicoService.DeleteAsync(medico.Id);
+                Snackbar.Add("Médico eliminado con éxito", Severity.Success);
+                Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error al eliminar el médico: {ex.Message}", Severity.Error);
+            }
+        }
     }
+
+
+
 }

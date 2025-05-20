@@ -1,6 +1,9 @@
 ﻿@using MediReserva.Models
 @using MudBlazor
 @inject IEspecialidadService EspecialidadService
+@inject IMedicoService MedicoService
+@inject ISnackbar Snackbar
+
 @namespace MediReserva.Pages.Modals
 
 <MudDialog>
@@ -27,14 +30,18 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] IDialogReference MudDialog { get; set; } = default!;
-    [Parameter] public Medico MedicoParametro { get; set; } = new();
+    [CascadingParameter]
+    IDialogReference MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Medico MedicoParametro { get; set; } = new();
 
     private Medico _medico = new();
     private List<Especialidad> Especialidades = new();
 
     protected override async Task OnInitializedAsync()
     {
+        // Si viene por parámetro un médico, clonar sus datos
         _medico = new Medico
             {
                 Id = MedicoParametro.Id,
@@ -48,13 +55,26 @@
         Especialidades = await EspecialidadService.GetAllAsync();
     }
 
-    private void Guardar()
+    private async Task Guardar()
     {
-        MudDialog.Close(DialogResult.Ok(_medico));
+        if (string.IsNullOrWhiteSpace(_medico.Nombre) || _medico.EspecialidadId <= 0)
+            return;
+
+        await MedicoService.AddAsync(_medico);
+
+        Snackbar.Add("Médico creado con éxito", Severity.Success);
+
+        MudDialog?.Close(DialogResult.Ok(_medico));
     }
+
+
 
     private void Cancelar()
     {
-      
+        _medico = new Medico(); // Limpia los campos (opcional si deseas persistencia)
+        MudDialog?.Close(DialogResult.Cancel());
     }
+
+
+
 }
