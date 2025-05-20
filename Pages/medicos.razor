@@ -1,5 +1,7 @@
 ﻿@page "/medicos"
 @using MediReserva.Models
+@using MediReserva.Pages.Modals
+@inject IDialogService DialogService
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
     <MudText Typo="Typo.h5" Class="mb-4">Listado de Médicos</MudText>
@@ -15,11 +17,12 @@
                           FullWidth="true" />
         </MudItem>
         <MudItem xs="6" Class="d-flex justify-end">
-            <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="CrearMedico">
+            <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="@CrearMedico">
                 Crear Médico
             </MudButton>
         </MudItem>
     </MudGrid>
+
     <MudPaper Class="p-4">
         <MudTable Items="_filteredMedicos"
                   Filter="TableFilter"
@@ -71,14 +74,52 @@
             || (medico.Consultorio?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
-    private void CrearMedico()
+    private async Task CrearMedico()
     {
-        // Lógica para crear médico (puedes redirigir, mostrar un formulario, etc.)
+        var parameters = new DialogParameters
+            {
+                ["MedicoParametro"] = new Medico()
+            };
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = true
+            };
+
+        var dialog = await DialogService.ShowAsync<MedicoModal>("Crear Médico", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is Medico medicoCreado)
+        {
+            _medicos.Add(medicoCreado);
+        }
     }
 
-    private void EditarMedico(Medico medico)
+    private async Task EditarMedico(Medico medico)
     {
-        // Lógica para edición (puedes abrir un diálogo aquí)
+        var parameters = new DialogParameters
+            {
+                ["MedicoParametro"] = medico
+            };
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = true
+            };
+
+        var dialog = await DialogService.ShowAsync<MedicoModal>("Editar Médico", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is Medico medicoEditado)
+        {
+            var index = _medicos.FindIndex(m => m.Id == medicoEditado.Id);
+            if (index != -1)
+                _medicos[index] = medicoEditado;
+        }
     }
 
     private void EliminarMedico(Medico medico)
