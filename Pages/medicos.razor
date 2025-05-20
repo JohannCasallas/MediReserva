@@ -89,11 +89,15 @@
             };
 
         var dialog = await DialogService.ShowAsync<MedicoModal>("Crear Médico", parameters, options);
-        var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is Medico medicoCreado)
+        if (dialog is not null)
         {
-            _medicos.Add(medicoCreado);
+            var result = await dialog.Result;
+
+            if (result is { Canceled: false, Data: Medico medicoCreado })
+            {
+                _medicos.Add(medicoCreado);
+            }
         }
     }
 
@@ -112,15 +116,20 @@
             };
 
         var dialog = await DialogService.ShowAsync<MedicoModal>("Editar Médico", parameters, options);
-        var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is Medico medicoEditado)
+        if (dialog is not null)
         {
-            var index = _medicos.FindIndex(m => m.Id == medicoEditado.Id);
-            if (index != -1)
-                _medicos[index] = medicoEditado;
+            var result = await dialog.Result;
+
+            if (result is { Canceled: false, Data: Medico medicoEditado })
+            {
+                var index = _medicos.FindIndex(m => m.Id == medicoEditado.Id);
+                if (index != -1)
+                    _medicos[index] = medicoEditado;
+            }
         }
     }
+
 
     private void EliminarMedico(Medico medico)
     {

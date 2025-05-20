@@ -1,21 +1,23 @@
 ﻿@using MediReserva.Models
 @using MudBlazor
+@inject IEspecialidadService EspecialidadService
 @namespace MediReserva.Pages.Modals
 
 <MudDialog>
     <DialogContent>
-        <MudText Typo="Typo.h6">@(_medico.Id == 0 ? "Crear Médico" : "Editar Médico")</MudText>
-
-        <MudTextField Label="Nombre" @bind-Value="_medico.Nombre" Required="true" />
-        <MudTextField Label="Email" @bind-Value="_medico.Email" />
-        <MudTextField Label="Teléfono" @bind-Value="_medico.Telefono" />
-        <MudTextField Label="Consultorio" @bind-Value="_medico.Consultorio" />
-        <MudSelect T="int" Label="Especialidad" @bind-Value="_medico.EspecialidadId" Required="true">
-            @foreach (var especialidad in Especialidades)
-            {
-                <MudSelectItem Value="@especialidad.Id">@especialidad.Nombre</MudSelectItem>
-            }
-        </MudSelect>
+        <MudStack Spacing="3">
+            <MudTextField Label="Nombre" @bind-Value="_medico.Nombre" Required="true" />
+            <MudTextField Label="Email" @bind-Value="_medico.Email" />
+            <MudTextField Label="Teléfono" @bind-Value="_medico.Telefono" />
+            <MudTextField Label="Consultorio" @bind-Value="_medico.Consultorio" />
+            <MudSelect T="int" Label="Especialidad" @bind-Value="_medico.EspecialidadId" Required="true" Clearable="true">
+                <MudSelectItem Value="-1">-- Seleccione una especialidad --</MudSelectItem>
+                @foreach (var especialidad in Especialidades)
+                {
+                    <MudSelectItem Value="@especialidad.Id">@especialidad.Nombre</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
     </DialogContent>
 
     <DialogActions>
@@ -31,7 +33,7 @@
     private Medico _medico = new();
     private List<Especialidad> Especialidades = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         _medico = new Medico
             {
@@ -43,12 +45,7 @@
                 EspecialidadId = MedicoParametro.EspecialidadId
             };
 
-        Especialidades = new List<Especialidad>
-        {
-            new Especialidad { Id = 1, Nombre = "Cardiología" },
-            new Especialidad { Id = 2, Nombre = "Pediatría" },
-            new Especialidad { Id = 3, Nombre = "Dermatología" }
-        };
+        Especialidades = await EspecialidadService.GetAllAsync();
     }
 
     private void Guardar()
@@ -58,6 +55,6 @@
 
     private void Cancelar()
     {
-        // MudDialog.Cancel();
+      
     }
 }
