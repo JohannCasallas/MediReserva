@@ -5,113 +5,88 @@
 @inject IEspecialidadService EspecialidadService
 @inject IMedicoService MedicoService
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
-<MudDialog>
-    <DialogContent>
-        <EditForm Model="_medico" OnValidSubmit="Guardar" OnInvalidSubmit="OnInvalidSubmit">
-            @* <DataAnnotationsValidator /> *@
-            <ValidationSummary />
-
+<MudMessageBox @ref="_messageBox"
+               Title="@(_medico.Id == 0 ? "Crear Médico" : "Editar Médico")"
+               CancelText="Cancelar">
+    <MessageContent>
+        <EditForm Model="_medico" OnValidSubmit="Guardar">
+            <DataAnnotationsValidator />
             <MudStack Spacing="3">
-                <MudTextField Label="Nombre" @bind-Value="_medico.Nombre" For="@(() => _medico.Nombre)" Required="true" MaxLength="100" />
-                <MudTextField Label="Email" @bind-Value="_medico.Email" For="@(() => _medico.Email)" MaxLength="100" />
-                <MudTextField Label="Teléfono" @bind-Value="_medico.Telefono" For="@(() => _medico.Telefono)" MaxLength="15" />
-                <MudSelect T="string"
-                           Label="Consultorio"
-                           @bind-Value="_medico.Consultorio"
-                           For="@(() => _medico.Consultorio)"
-                           Required="true"
-                           Clearable="false">
+                <MudTextField Label="Nombre" @bind-Value="_medico.Nombre" Required="true" />
+                <MudTextField Label="Email" @bind-Value="_medico.Email" Required="true" />
+                <MudTextField Label="Teléfono" @bind-Value="_medico.Telefono" />
+                <MudSelect Label="Consultorio" @bind-Value="_medico.Consultorio" Required="true">
                     @foreach (var c in Consultorios)
                     {
                         <MudSelectItem Value="@c">@c</MudSelectItem>
                     }
                 </MudSelect>
-
-
-                <MudSelect T="int" Label="Especialidad" @bind-Value="_medico.EspecialidadId" For="@(() => _medico.EspecialidadId)" Required="true" Clearable="true">
-                    <MudSelectItem Value="-1">-- Seleccione una especialidad --</MudSelectItem>
-                    @foreach (var especialidad in Especialidades)
+                <MudSelect Label="Especialidad" @bind-Value="_medico.EspecialidadId" Required="true">
+                    @foreach (var e in Especialidades)
                     {
-                        <MudSelectItem Value="@especialidad.Id">@especialidad.Nombre</MudSelectItem>
+                        <MudSelectItem Value="@e.Id">@e.Nombre</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
         </EditForm>
-    </DialogContent>
-
-    <DialogActions>
-        <MudButton Color="Color.Primary" Disabled="@(!_isValid)" OnClick="Guardar">
-            Guardar
-        </MudButton>
-        <MudButton Color="Color.Secondary" OnClick="Cancelar">
-            Cancelar
-        </MudButton>
-    </DialogActions>
-</MudDialog>
+    </MessageContent>
+    <YesButton>
+        <MudButton Color="Color.Primary" OnClick="Guardar">Guardar</MudButton>
+    </YesButton>
+</MudMessageBox>
 
 @code {
-    [CascadingParameter]
-    IDialogReference MudDialog { get; set; } = default!;
+    private MudMessageBox? _messageBox;
+    private Medico _medico = new();
+    private List<Especialidad> Especialidades = new();
+    private List<string> Consultorios = new() { "105E", "103C", "104D", "102B", "101A" };
 
     [Parameter]
     public Medico MedicoParametro { get; set; } = new();
 
-    private Medico _medico = new();
-    private List<Especialidad> Especialidades = new();
-    private bool _isValid = false;
-
     protected override async Task OnInitializedAsync()
     {
         _medico = new Medico
-        {
-            Id = MedicoParametro.Id,
-            Nombre = MedicoParametro.Nombre,
-            Email = MedicoParametro.Email,
-            Telefono = MedicoParametro.Telefono,
-            Consultorio = MedicoParametro.Consultorio,
-            EspecialidadId = MedicoParametro.EspecialidadId
-        };
+            {
+                Id = MedicoParametro.Id,
+                Nombre = MedicoParametro.Nombre,
+                Email = MedicoParametro.Email,
+                Telefono = MedicoParametro.Telefono,
+                Consultorio = MedicoParametro.Consultorio,
+                EspecialidadId = MedicoParametro.EspecialidadId
+            };
 
         Especialidades = await EspecialidadService.GetAllAsync();
-        ValidateForm();
     }
 
-    private List<string> Consultorios = new()
+    public async Task<bool?> ShowAsync(DialogOptions options)
     {
-        "105E", "103C", "104D", "102B", "101A"
-    };
-
-
-    private void ValidateForm()
-    {
-        var context = new ValidationContext(_medico);
-        var results = new List<ValidationResult>();
-        _isValid = Validator.TryValidateObject(_medico, context, results, true);
-    }
-
-    private void OnInvalidSubmit()
-    {
-        _isValid = false;
+        return await _messageBox!.ShowAsync(options);
     }
 
     private async Task Guardar()
     {
-        ValidateForm();
-        if (!_isValid)
-            return;
+        try
+        {
+            if (_medico.Id == 0)
+            {
+                await MedicoService.AddAsync(_medico);
+                Snackbar.Add("Médico creado con éxito", Severity.Success);
+            }
+            else
+            {
+                await MedicoService.UpdateAsync(_medico);
+                Snackbar.Add("Médico actualizado con éxito", Severity.Success);
+            }
+            _messageBox?.Close(); 
 
-        if (_medico.Id == 0)
-            await MedicoService.AddAsync(_medico);
-        else
-            await MedicoService.UpdateAsync(_medico);
-
-        Snackbar.Add("Médico guardado con éxito", Severity.Success);
-        MudDialog?.Close(DialogResult.Ok(_medico));
-    }
-
-    private void Cancelar()
-    {
-        MudDialog?.Close(DialogResult.Cancel());
+            await Task.Delay(1);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
     }
 }

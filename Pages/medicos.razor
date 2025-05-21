@@ -4,6 +4,8 @@
 @inject IMedicoService MedicoService
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
 
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
@@ -92,11 +94,18 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await RefrescarMedicos();
+    }
+
+
+    private async Task RefrescarMedicos()
+    {
         _isLoading = true;
         _medicos = await MedicoService.GetAllAsync();
         _isLoading = false;
         StateHasChanged();
     }
+
 
     private bool TableFilter(Medico medico)
     {
@@ -123,15 +132,12 @@
                 FullWidth = true
             };
 
-        var dialog = await DialogService.ShowAsync<MedicoModal>("Crear Médico", parameters, options);
+        var dialog = DialogService.Show<MedicoModal>("Crear Médico", parameters, options);
+        var result = await dialog.Result;
 
-        if (dialog is not null)
+        if (!result.Canceled)
         {
-            var result = await dialog.Result;
-            if (result is { Canceled: false, Data: Medico medicoCreado })
-            {
-                _medicos?.Add(medicoCreado);
-            }
+            await RefrescarMedicos();
         }
     }
 
@@ -139,7 +145,15 @@
     {
         var parameters = new DialogParameters
             {
-                ["MedicoParametro"] = medico
+                ["MedicoParametro"] = new Medico
+                {
+                    Id = medico.Id,
+                    Nombre = medico.Nombre,
+                    Email = medico.Email,
+                    Telefono = medico.Telefono,
+                    Consultorio = medico.Consultorio,
+                    EspecialidadId = medico.EspecialidadId
+                }
             };
 
         var options = new DialogOptions
@@ -149,19 +163,15 @@
                 FullWidth = true
             };
 
-        var dialog = await DialogService.ShowAsync<MedicoModal>("Editar Médico", parameters, options);
+        var dialog = DialogService.Show<MedicoModal>("Editar Médico", parameters, options);
+        var result = await dialog.Result;
 
-        if (dialog is not null)
+        if (!result.Canceled)
         {
-            var result = await dialog.Result;
-            if (result is { Canceled: false, Data: Medico medicoEditado })
-            {
-                var index = _medicos?.FindIndex(m => m.Id == medicoEditado.Id);
-                if (index.HasValue && index.Value != -1)
-                    _medicos![index.Value] = medicoEditado;
-            }
+            await RefrescarMedicos();
         }
     }
+
 
     private MudMessageBox? _messageBox;
 
